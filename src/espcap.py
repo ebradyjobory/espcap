@@ -32,7 +32,7 @@ from snort import Snort
 from indexer import index_packets, dump_packets
 
 
-def init_live_capture(es, tshark, nic, bpf, chunk, count):
+def init_live_capture(es, snort, nic, bpf, chunk, count):
     """ Set up for live packet capture.
 
     :param es: Elasticsearch cluster handle, None if packets are dumped to stdout
@@ -44,8 +44,10 @@ def init_live_capture(es, tshark, nic, bpf, chunk, count):
     :param count: Number of packets to capture, 0 if capturing indefinitely,
     """
     try:
-        command = tshark.make_command(nic=nic, count=count, bpf=bpf, pcap_file=None, interfaces=False)
-        capture = tshark.capture(command)
+        # command = tshark.make_command(nic=nic, count=count, bpf=bpf, pcap_file=None, interfaces=False)
+        # capture = tshark.capture(command)
+        command = snort.make_command(nic=nic, count=count, bpf=bpf, pcap_file=None, interfaces=False)
+        capture = snort.capture(command)
         if es is None:
             dump_packets(capture)
         else:
@@ -57,7 +59,7 @@ def init_live_capture(es, tshark, nic, bpf, chunk, count):
         sys.ext(1)
 
 
-def init_file_capture(es, tshark, pcap_files, chunk):
+def init_file_capture(es, snort, pcap_files, chunk):
     """ Set up for file packet capture.
 
     :param es: Elasticsearch cluster handle, None if packets are dumped to stdout
@@ -69,9 +71,10 @@ def init_file_capture(es, tshark, pcap_files, chunk):
     try:
         print('Loading packet capture file(s)')
         for pcap_file in pcap_files:
-            command = tshark.make_command(nic=None, count=0, bpf=None, pcap_file=pcap_file, interfaces=None)
+            # command = tshark.make_command(nic=None, count=0, bpf=None, pcap_file=pcap_file, interfaces=None)
+            command = snort.make_command(nic=None, count=0, bpf=None, pcap_file=pcap_file, interfaces=None)
             print('command => ', command)
-            capture = tshark.capture(command)
+            capture = snort.capture(command)
             if es is None:
                 dump_packets(capture)
             else:
@@ -94,16 +97,23 @@ def init_file_capture(es, tshark, pcap_files, chunk):
 @click.option('--list', is_flag=True, help='Lists the network interfaces')
 def main(node, nic, file, dir, bpf, chunk, count, list):
     try:
-        tshark = Tshark()
-        tshark.set_interrupt_handler()
+        # tshark = Tshark()
+        # tshark.set_interrupt_handler()
+
+        snort = Snort()
+        snort.set_interrupt_handler()
 
         es = None
         if node is not None:
             es = Elasticsearch(node)
 
         if list:
-            command = tshark.make_command(nic=None, count=0, bpf=None, pcap_file=None, interfaces=True)
-            tshark.list_interfaces(command)
+            # command = tshark.make_command(nic=None, count=0, bpf=None, pcap_file=None, interfaces=True)
+            # tshark.list_interfaces(command)
+            # sys.exit(0)
+
+            command = snort.make_command(nic=None, count=0, bpf=None, pcap_file=None, interfaces=True)
+            snort.list_interfaces(command)
             sys.exit(0)
 
         if nic is None and file is None and dir is None:
@@ -117,12 +127,12 @@ def main(node, nic, file, dir, bpf, chunk, count, list):
         syslog.syslog("espcap started")
 
         if nic is not None:
-            init_live_capture(es=es, tshark=tshark, nic=nic, bpf=bpf, chunk=chunk, count=count)
+            init_live_capture(es=es, snort=snort, nic=nic, bpf=bpf, chunk=chunk, count=count)
 
         elif file is not None:
             pcap_files = []
             pcap_files.append(file)
-            init_file_capture(es=es, tshark=tshark, pcap_files=pcap_files, chunk=chunk)
+            init_file_capture(es=es, snort=snort, pcap_files=pcap_files, chunk=chunk)
 
         elif dir is not None:
             pcap_files = []
@@ -130,7 +140,7 @@ def main(node, nic, file, dir, bpf, chunk, count, list):
             files.sort()
             for file in files:
                 pcap_files.append(dir+'/'+file)
-            init_file_capture(es=es, tshark=tshark, indexer=indexer, pcap_files=pcap_files, chunk=chunk)
+            init_file_capture(es=es, snort=snort, indexer=indexer, pcap_files=pcap_files, chunk=chunk)
 
     except Exception as e:
         print('[ERROR] ', e)

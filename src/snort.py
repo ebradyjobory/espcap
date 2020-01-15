@@ -77,22 +77,22 @@ class Snort(object):
         """
         command = self._command
 
-        if interfaces is True:
-            command.append('-D')
-            return command
+        # if interfaces is True:
+        #     command.append('-D')
+        #     return command
 
-        command.append('-T')
-        command.append('ek')
-        if nic is not None:
-            command.append('-i')
-            command.append(nic)
-        if count != 0:
-            command.append('-c')
-            command.append(str(count))
-        if bpf is not None:
-            elements = bpf.split()
-            for element in elements:
-                command.append(element)
+        # command.append('-T')
+        # command.append('ek')
+        # if nic is not None:
+        #     command.append('-i')
+        #     command.append(nic)
+        # if count != 0:
+        #     command.append('-c')
+        #     command.append(str(count))
+        # if bpf is not None:
+        #     elements = bpf.split()
+        #     for element in elements:
+        #         command.append(element)
         if pcap_file is not None:
             command.append('-r')
             command.append(pcap_file)
