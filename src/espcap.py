@@ -28,6 +28,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch import helpers
 
 from tshark import Tshark
+from snort import Snort
 from indexer import index_packets, dump_packets
 
 
@@ -69,7 +70,7 @@ def init_file_capture(es, tshark, pcap_files, chunk):
         print('Loading packet capture file(s)')
         for pcap_file in pcap_files:
             command = tshark.make_command(nic=None, count=0, bpf=None, pcap_file=pcap_file, interfaces=None)
-            print(pcap_file)
+            print('command => ', command)
             capture = tshark.capture(command)
             if es is None:
                 dump_packets(capture)
